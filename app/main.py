@@ -3,6 +3,8 @@ import os
 import zlib
 import hashlib
 
+valid_commands = ["init", "cat-file", "hash-object"]
+
 
 def read_file_as_bytes(file_path: str) -> bytes:
     with open(file_path, "rb") as file:
@@ -82,15 +84,14 @@ def main():
         SHA1_suffix = git_sha1[2:]
         file_path = f".git/objects/{SHA1_prefix}/{SHA1_suffix}"
 
-        print(git_sha1)
-
         if not os.path.exists(file_path):
             os.makedirs(f".git/objects/{SHA1_prefix}")
             with open(file_path, "wb") as f:
                 f.write(blob_object)
 
-    else:
-        print(f"args: {args}")
+        print(git_sha1)
+
+    if command not in valid_commands:
         raise RuntimeError(f"Unknown command #{command}")
 
 
