@@ -22,16 +22,19 @@ def extract_file_content(compressed_data: bytes) -> str:
     return cleaned_file_content
 
 
-def create_blob_object(file_content: str) -> bytes:
-
+def create_blob_object(file_content: str) -> tuple[bytes, str]:
     header = f"blob {len(file_content)}\x00"
+    blob_content = header + file_content
     blob_object = zlib.compress(header.encode() + file_content.encode())
 
-    return blob_object
+    return blob_object, blob_content
 
 
-def create_git_sha1(blob_object: bytes) -> str:
-    hash = hashlib.sha1(blob_object).hexdigest()
+def create_git_sha1(blob_content: str) -> str:
+    if isinstance(blob_content, str):
+        blob_to_hash = blob_content.encode()
+
+    hash = hashlib.sha1(blob_to_hash).hexdigest()
 
     return hash
 
@@ -72,15 +75,22 @@ def main():
             raise RuntimeError(f"Not enough arguments for {command} command")
 
         encoded_file = read_file_as_str(f"{args[3]}")
-        blob_object = create_blob_object(encoded_file)
-        git_sha1 = create_git_sha1(blob_object)
+        blob_object, blob_content = create_blob_object(encoded_file)
+        git_sha1 = create_git_sha1(blob_content)
 
         SHA1_prefix = git_sha1[:2]
         SHA1_suffix = git_sha1[2:]
         file_path = f".git/objects/{SHA1_prefix}/{SHA1_suffix}"
-        print(file_path)
+
+        print(git_sha1)
+
+        if not os.path.exists(file_path):
+            os.makedirs(f".git/objects/{SHA1_prefix}")
+            with open(file_path, "wb") as f:
+                f.write(blob_object)
 
     else:
+        print(f"args: {args}")
         raise RuntimeError(f"Unknown command #{command}")
 
 
