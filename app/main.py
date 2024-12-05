@@ -3,7 +3,7 @@ import os
 import zlib
 import hashlib
 
-valid_commands = ["init", "cat-file", "hash-object"]
+valid_commands = ["init", "cat-file", "hash-object", "ls-tree"]
 
 
 def read_file_as_bytes(file_path: str) -> bytes:
@@ -96,6 +96,16 @@ def main():
             raise RuntimeError(f"Not enough arguments for {command} command")
 
         flag = args[2]
+        git_sha1 = args[3]
+        SHA1_prefix = git_sha1[:2]
+        SHA1_suffix = git_sha1[2:]
+        file_path = f".git/objects/{SHA1_prefix}/{SHA1_suffix}"
+
+        print(f"SHA1: {git_sha1}")
+        print(f"path: {file_path}")
+
+        if not os.path.exists(file_path):
+            raise RuntimeError(f"Object {git_sha1} not found")
 
     if command not in valid_commands:
         raise RuntimeError(f"Unknown command #{command}")
