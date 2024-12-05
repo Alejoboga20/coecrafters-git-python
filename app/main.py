@@ -91,6 +91,12 @@ def main():
 
         print(git_sha1)
 
+    if command == "ls-tree":
+        if len(args) < 3:
+            raise RuntimeError(f"Not enough arguments for {command} command")
+
+        flag = args[2]
+
     if command not in valid_commands:
         raise RuntimeError(f"Unknown command #{command}")
 
