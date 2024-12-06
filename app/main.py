@@ -6,6 +6,36 @@ import hashlib
 valid_commands = ["init", "cat-file", "hash-object", "ls-tree"]
 
 
+def extract_tree_content(compressed_data: bytes):
+    tree_entries: list[str] = []
+    names_only: str = ""
+    decompressed_data = zlib.decompress(compressed_data)
+    header, body = decompressed_data.split(b"\x00", 1)
+
+    object_type, _ = header.decode().split(" ")
+    if object_type != "tree":
+        raise ValueError(f"Expected a tree object, but got: {object_type}")
+
+    while body:
+        mode_end = body.find(b" ")
+        if mode_end == -1:
+            break
+
+        name_end = body.find(b"\x00", mode_end + 1)
+        if name_end == -1:
+            break
+
+        file_name = body[mode_end + 1:name_end].decode()
+        tree_entries.append(file_name)
+
+        body = body[name_end + 1 + 20:]
+
+    for entry in tree_entries:
+        names_only += f"{entry}\n"
+
+    return names_only
+
+
 def read_file_as_bytes(file_path: str) -> bytes:
     with open(file_path, "rb") as file:
         return file.read()
@@ -101,11 +131,13 @@ def main():
         SHA1_suffix = git_sha1[2:]
         file_path = f".git/objects/{SHA1_prefix}/{SHA1_suffix}"
 
-        print(f"SHA1: {git_sha1}")
-        print(f"path: {file_path}")
-
         if not os.path.exists(file_path):
             raise RuntimeError(f"Object {git_sha1} not found")
+
+        compressed_data = read_file_as_bytes(file_path)
+        tree_content = extract_tree_content(compressed_data)
+
+        print(tree_content, end="")
 
     if command not in valid_commands:
         raise RuntimeError(f"Unknown command #{command}")
