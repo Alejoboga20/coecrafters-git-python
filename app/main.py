@@ -11,9 +11,54 @@ tree_modes = {
 }
 
 
+def create_tree_object(tree_entries: list[str]) -> bytes:
+    tree_content = b""
+
+    for entry in tree_entries:
+        mode, rest = entry.split(" ", 1)
+        name, sha_hex = rest.split("\x00", 1)
+
+        sha_bin = bytes.fromhex(sha_hex)
+
+        tree_content += f"{mode} {name}\x00".encode() + sha_bin
+
+    header = f"tree {len(tree_content)}\x00".encode()
+    tree_object = header + tree_content
+
+    return tree_object
+
+
+# def write_tree_object(tree_object: bytes) -> str:
+#     sha1 = hashlib.sha1(tree_object).hexdigest()
+
+#     # Write the object to the .git/objects directory
+#     git_objects_dir = ".git/objects"
+#     object_dir = f"{git_objects_dir}/{sha1[:2]}"
+#     object_file = f"{object_dir}/{sha1[2:]}"
+
+#     os.makedirs(object_dir, exist_ok=True)
+
+#     with open(object_file, "wb") as f:
+#         compressed_object = zlib.compress(tree_object)
+#         f.write(compressed_object)
+
+#     return sha1
+
+
 def read_working_directory():
     tree_entries: list[str] = []
     working_directory = os.getcwd()
+
+    def compute_tree_sha(tree_entries: list[str]) -> str:
+        # Concatenate tree entries
+        tree_content = "".join(tree_entries).encode()
+
+        # Add Git tree header
+        header = f"tree {len(tree_content)}\x00".encode()
+        full_tree = header + tree_content
+
+        # Compute SHA-1 and return it as a hex string
+        return hashlib.sha1(full_tree).hexdigest()
 
     for root, directories, files in os.walk(working_directory):
         if ".git" in directories:
@@ -27,7 +72,14 @@ def read_working_directory():
             tree_entry = f"{tree_modes['blob']} {file}\x00{git_sha1}"
             tree_entries.append(tree_entry)
 
-        print(tree_entries)
+        for directory in directories:
+            sub_tree_sha = compute_tree_sha(tree_entries)
+            tree_entry = f"{tree_modes['directory']} {directory}\x00{sub_tree_sha}"
+            tree_entries.append(tree_entry)
+
+    tree_object = create_tree_object(tree_entries)
+    tree_sha = hashlib.sha1(tree_object).hexdigest()
+    print(tree_sha)
 
     return
 
