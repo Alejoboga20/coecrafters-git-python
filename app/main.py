@@ -28,21 +28,20 @@ def create_tree_object(tree_entries: list[str]) -> bytes:
     return tree_object
 
 
-# def write_tree_object(tree_object: bytes) -> str:
-#     sha1 = hashlib.sha1(tree_object).hexdigest()
+def write_tree_object(tree_object: bytes) -> str:
+    sha1 = hashlib.sha1(tree_object).hexdigest()
 
-#     # Write the object to the .git/objects directory
-#     git_objects_dir = ".git/objects"
-#     object_dir = f"{git_objects_dir}/{sha1[:2]}"
-#     object_file = f"{object_dir}/{sha1[2:]}"
+    git_objects_dir = ".git/objects"
+    object_dir = f"{git_objects_dir}/{sha1[:2]}"
+    object_file = f"{object_dir}/{sha1[2:]}"
 
-#     os.makedirs(object_dir, exist_ok=True)
+    os.makedirs(object_dir, exist_ok=True)
 
-#     with open(object_file, "wb") as f:
-#         compressed_object = zlib.compress(tree_object)
-#         f.write(compressed_object)
+    with open(object_file, "wb") as f:
+        compressed_object = zlib.compress(tree_object)
+        f.write(compressed_object)
 
-#     return sha1
+    return sha1
 
 
 def read_working_directory():
@@ -78,7 +77,8 @@ def read_working_directory():
             tree_entries.append(tree_entry)
 
     tree_object = create_tree_object(tree_entries)
-    tree_sha = hashlib.sha1(tree_object).hexdigest()
+    tree_sha = write_tree_object(tree_object)
+
     print(tree_sha)
 
     return
