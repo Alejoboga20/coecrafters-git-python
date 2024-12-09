@@ -14,7 +14,10 @@ tree_modes = {
 def create_tree_object(tree_entries: list[str]) -> bytes:
     tree_content = b""
 
-    for entry in tree_entries:
+    sorted_entries = sorted(
+        tree_entries, key=lambda entry: entry.split(" ", 1)[1].split("\x00")[0])
+
+    for entry in sorted_entries:
         mode, rest = entry.split(" ", 1)
         name, sha_hex = rest.split("\x00", 1)
 
