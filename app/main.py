@@ -5,6 +5,32 @@ import hashlib
 
 valid_commands = ["init", "cat-file", "hash-object", "ls-tree", "write-tree"]
 
+tree_modes = {
+    "blob": "100644",
+    "directory": "40000",
+}
+
+
+def read_working_directory():
+    tree_entries: list[str] = []
+    working_directory = os.getcwd()
+
+    for root, directories, files in os.walk(working_directory):
+        if ".git" in directories:
+            directories.remove(".git")
+
+        for file in files:
+            file_path = os.path.join(root, file)
+            encoded_file = read_file_as_str(file_path)
+            _, blob_content = create_blob_object(encoded_file)
+            git_sha1 = create_git_sha1(blob_content)
+            tree_entry = f"{tree_modes['blob']} {file}\x00{git_sha1}"
+            tree_entries.append(tree_entry)
+
+        print(tree_entries)
+
+    return
+
 
 def extract_tree_content(compressed_data: bytes):
     tree_entries: list[str] = []
@@ -140,25 +166,7 @@ def main():
         print(tree_content, end="")
 
     if command == "write-tree":
-        if len(args) < 3:
-            raise RuntimeError(f"Not enough arguments for {command} command")
-
-        print("Not implemented yet")
-
-        # tree_content = args[2]
-        # tree_object, _ = create_blob_object(tree_content)
-        # git_sha1 = create_git_sha1(tree_content)
-
-        # SHA1_prefix = git_sha1[:2]
-        # SHA1_suffix = git_sha1[2:]
-        # file_path = f".git/objects/{SHA1_prefix}/{SHA1_suffix}"
-
-        # if not os.path.exists(file_path):
-        #     os.makedirs(f".git/objects/{SHA1_prefix}")
-        #     with open(file_path, "wb") as f:
-        #         f.write(tree_object)
-
-        # print(git_sha1)
+        read_working_directory()
 
     if command not in valid_commands:
         raise RuntimeError(f"Unknown command #{command}")
