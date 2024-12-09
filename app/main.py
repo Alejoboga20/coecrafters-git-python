@@ -3,7 +3,7 @@ import os
 import zlib
 import hashlib
 
-valid_commands = ["init", "cat-file", "hash-object", "ls-tree"]
+valid_commands = ["init", "cat-file", "hash-object", "ls-tree", "write-tree"]
 
 
 def extract_tree_content(compressed_data: bytes):
@@ -138,6 +138,27 @@ def main():
         tree_content = extract_tree_content(compressed_data)
 
         print(tree_content, end="")
+
+    if command == "write-tree":
+        if len(args) < 3:
+            raise RuntimeError(f"Not enough arguments for {command} command")
+
+        print("Not implemented yet")
+
+        # tree_content = args[2]
+        # tree_object, _ = create_blob_object(tree_content)
+        # git_sha1 = create_git_sha1(tree_content)
+
+        # SHA1_prefix = git_sha1[:2]
+        # SHA1_suffix = git_sha1[2:]
+        # file_path = f".git/objects/{SHA1_prefix}/{SHA1_suffix}"
+
+        # if not os.path.exists(file_path):
+        #     os.makedirs(f".git/objects/{SHA1_prefix}")
+        #     with open(file_path, "wb") as f:
+        #         f.write(tree_object)
+
+        # print(git_sha1)
 
     if command not in valid_commands:
         raise RuntimeError(f"Unknown command #{command}")
